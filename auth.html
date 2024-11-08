@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IBM App ID Demo</title>
+  </head>
+  <body>
+    <h1>IBM App ID Integration</h1>
+
+    <!-- Status and user profile -->
+    <p id="status">Not logged in</p>
+    <p id="userProfile"></p>
+
+    <!-- Login and Logout buttons -->
+    <button onclick="login()">Login</button>
+    <button onclick="logout()">Logout</button>
+
+    <!-- Include IBM App ID SDK -->
+    <script src="https://cdn.appid.cloud.ibm.com/appid-sdk/4.0.0/appid-sdk.min.js"></script>
+    <script src="https://cdn.appid.cloud.ibm.com/appid-0.3.0.min.js"></script>
+    <!-- Your App ID JavaScript -->
+    <script>
+      const appID = new AppID();
+      appID.init({
+        clientId: "ac6d7992-86c4-4268-8733-64e5085e0137", // Replace with your App ID Client ID
+        discoveryEndpoint:
+          "https://au-syd.appid.cloud.ibm.com/oauth/v4/ff0bb637-1425-40c3-b3f4-558273f86fa9/.well-known/openid-configuration", // Replace with your App ID Discovery URL
+      });
+
+      async function login() {
+        try {
+          // Initiates login with redirect to IBM App ID
+          const tokens = await appID.signin();
+          console.log("User authenticated:", tokens);
+
+          // Store the ID token to use for identifying the user or calling secure APIs
+          sessionStorage.setItem("idToken", tokens.idToken);
+          document.getElementById("status").textContent =
+            "Logged in successfully!";
+          loadUserProfile();
+        } catch (error) {
+          console.error("Login failed:", error);
+          document.getElementById("status").textContent = "Login failed!";
+        }
+      }
+
+      function logout() {
+        appID.signout();
+        sessionStorage.removeItem("idToken");
+        document.getElementById("status").textContent = "Logged out";
+      }
+
+      async function loadUserProfile() {
+        try {
+          const profile = await appID.getUserInfo(
+            sessionStorage.getItem("idToken")
+          );
+          document.getElementById(
+            "userProfile"
+          ).textContent = `Hello, ${profile.name}`;
+          console.log("User profile:", profile);
+        } catch (error) {
+          console.error("Failed to load user profile:", error);
+        }
+      }
+    </script>
+  </body>
+</html>
